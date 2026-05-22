@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Foto - Pantalla Gigante</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .upload-container {
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .upload-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .upload-card h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .upload-card p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-area.drag-over {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+        }
+
+        .description-input {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .preview {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .upload-card {
+                padding: 25px;
+            }
+        }
+    </style>
+    <script src="storage.js"></script>
+</head>
+<body>
+    <div class="upload-container">
+        <div class="upload-card">
+            <h1>📸 ¡Comparte tu momento!</h1>
+            <p>Tu foto aparecerá en la pantalla gigante después de ser aprobada</p>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📷</div>
+                <p>Arrastra tu foto aquí o haz clic para seleccionar</p>
+                <input type="file" id="file-input" accept="image/jpeg,image/png,image/jpg,image/webp">
+            </div>
+            
+            <textarea id="description" class="description-input" rows="3" placeholder="Describe tu foto (opcional)"></textarea>
+            
+            <button class="btn-upload" id="uploadBtn">Enviar a Pantalla Gigante</button>
+            
+            <div class="preview" id="preview">
+                <p>Vista previa:</p>
+                <img id="preview-img" alt="Vista previa">
+            </div>
+            
+            <div class="message" id="message"></div>
+            
+            <div class="info-box">
+                ℹ️ Tu foto será revisada por un moderador antes de aparecer en la pantalla.<br>
+                Formatos: JPG, PNG, WEBP | Máx 10MB
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const description = document.getElementById('description');
+        const preview = document.getElementById('preview');
+        const previewImg = document.getElementById('preview-img');
+        const messageDiv = document.getElementById('message');
+        
+        let selectedFile = null;
+        
+        // Click en el área de upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // Drag & drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            } else {
+                showMessage('Por favor, selecciona una imagen válida', 'error');
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        function handleFile(file) {
+            if (file.size > 10 * 1024 * 1024) {
+                showMessage('El archivo es demasiado grande. Máximo 10MB', 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            showMessage('', 'clear');
+        }
+        
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                showMessage('Por favor, selecciona una foto primero', 'error');
+                return;
+            }
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Subiendo...';
+            
+            try {
+                await photoStorage.addPhoto(selectedFile, description.value);
+                showMessage('✅ ¡Foto enviada exitosamente! Espera la aprobación del moderador.', 'success');
+                
+                // Resetear formulario
+                selectedFile = null;
+                fileInput.value = '';
+                description.value = '';
+                preview.style.display = 'none';
+                previewImg.src = '';
+            } catch (error) {
+                showMessage('❌ Error al subir la foto. Intenta nuevamente.', 'error');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Enviar a Pantalla Gigante';
+            }
+        });
+        
+        function showMessage(msg, type) {
+            messageDiv.textContent = msg;
+            messageDiv.className = 'message';
+            if (type === 'success') {
+                messageDiv.classList.add('success');
+            } else if (type === 'error') {
+                messageDiv.classList.add('error');
+            } else if (type === 'clear') {
+                messageDiv.style.display = 'none';
+                return;
+            }
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
