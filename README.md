@@ -46,7 +46,7 @@ MIT License - Ver archivo [LICENSE](LICENSE) para detalles
 
 ## 👥 Autores
 
-[Tu nombre] - [Tu GitHub]
+[IglGroup] - [IglgroupStreaming]
 
 ## 🙏 Agradecimientos
 
