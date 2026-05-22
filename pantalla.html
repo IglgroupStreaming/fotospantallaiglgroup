@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Pantalla Gigante - Modo Proyección</title>
+    <title>Pantalla Gigante - Modo Slide Show</title>
     <style>
         * {
             margin: 0;
@@ -15,48 +15,234 @@
             background: #000;
             overflow: hidden;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        .screen-container {
+        .slideshow-container {
             position: relative;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            overflow: hidden;
+        }
+
+        /* Contenedor de slides */
+        .slides-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Cada slide */
+        .slide {
+            position: absolute;
             width: 100%;
             height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+            opacity: 0;
+            transition: opacity 1.2s ease-in-out;
+            background: #000;
         }
 
-        #current-photo {
-            max-width: 100vw;
-            max-height: 100vh;
+        .slide.active {
+            opacity: 1;
+            z-index: 10;
+        }
+
+        .slide img {
+            max-width: 90vw;
+            max-height: 90vh;
             width: auto;
             height: auto;
             object-fit: contain;
-            transition: opacity 0.8s ease-in-out;
-            box-shadow: 0 0 50px rgba(255,255,255,0.2);
-            border-radius: 10px;
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(255,255,255,0.3);
+            animation: zoomIn 0.8s ease-out;
         }
 
-        .info-overlay {
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Información de la foto */
+        .slide-info {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 0 20px;
+            z-index: 20;
+            transform: translateY(100%);
+            animation: slideUp 0.5s ease-out 0.3s forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .slide-info .description {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .slide-info .counter {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Controles de navegación */
+        .nav-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 30;
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 10px 15px;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.1);
+        }
+
+        /* Indicadores de progreso */
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.1s linear;
+            z-index: 30;
+        }
+
+        /* Dots indicadores */
+        .dots-container {
             position: fixed;
             bottom: 20px;
             left: 0;
             right: 0;
-            text-align: center;
-            color: rgba(255,255,255,0.6);
-            font-size: 14px;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            backdrop-filter: blur(5px);
-            z-index: 10;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            z-index: 30;
+            pointer-events: none;
         }
 
-        .loading {
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transition: all 0.3s;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: white;
+            width: 30px;
+            border-radius: 5px;
+        }
+
+        .dot:hover {
+            background: rgba(255,255,255,0.8);
+            transform: scale(1.2);
+        }
+
+        /* Panel de control superior */
+        .top-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: rgba(0,0,0,0.6);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+        }
+
+        .control-btn:hover {
+            background: rgba(0,0,0,0.8);
+            transform: scale(1.05);
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            transition: opacity 0.5s;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mensaje vacío */
+        .empty-message {
             position: fixed;
             top: 50%;
             left: 50%;
@@ -64,137 +250,398 @@
             text-align: center;
             color: white;
             z-index: 20;
+            background: rgba(0,0,0,0.8);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255,255,255,0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .photo-description {
-            margin-top: 5px;
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
-            .info-overlay {
-                font-size: 10px;
-                bottom: 10px;
+            .slide-info .description {
+                font-size: 14px;
+            }
+            .nav-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 14px;
+            }
+            .control-btn {
+                padding: 6px 12px;
+                font-size: 12px;
             }
         }
     </style>
     <script src="storage.js"></script>
 </head>
 <body>
-    <div class="screen-container">
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Cargando pantalla gigante...</p>
-        </div>
-        <img id="current-photo" alt="Esperando fotos..." style="opacity: 0;">
-        <div class="info-overlay">
-            🖼️ PANTALLA GIGANTE | Actualización automática
-            <div id="photo-info" class="photo-description"></div>
-        </div>
-    </div>
 
-    <script>
-        const imgElement = document.getElementById('current-photo');
-        const loadingDiv = document.getElementById('loading');
-        const photoInfo = document.getElementById('photo-info');
-        let currentPhotoId = null;
-        
-        function updateDisplay() {
-            const lastPhoto = photoStorage.getLastApprovedPhoto();
+<div class="slideshow-container">
+    <div class="slides-wrapper" id="slidesWrapper"></div>
+    
+    <!-- Barra de progreso -->
+    <div class="progress-bar" id="progressBar"></div>
+    
+    <!-- Controles de navegación -->
+    <div class="nav-controls">
+        <button class="nav-btn" id="prevBtn" title="Anterior">◀</button>
+        <button class="nav-btn" id="playPauseBtn" title="Pausa/Reproducir">⏸</button>
+        <button class="nav-btn" id="nextBtn" title="Siguiente">▶</button>
+    </div>
+    
+    <!-- Dots indicadores -->
+    <div class="dots-container" id="dotsContainer"></div>
+    
+    <!-- Barra superior -->
+    <div class="top-bar">
+        <button class="control-btn" id="speedBtn">⚡ Velocidad: 5s</button>
+        <button class="control-btn" id="fullscreenBtn">⛶ Pantalla completa</button>
+    </div>
+    
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+</div>
+
+<script>
+    class SlideshowManager {
+        constructor() {
+            this.photos = [];
+            this.currentIndex = 0;
+            this.isPlaying = true;
+            this.intervalTime = 5000; // 5 segundos por defecto
+            this.intervalId = null;
+            this.speedOptions = [3000, 5000, 7000, 10000];
+            this.speedIndex = 1;
             
-            if (!lastPhoto) {
-                if (!loadingDiv.style.display === 'none') {
-                    loadingDiv.style.display = 'flex';
+            this.init();
+        }
+        
+        init() {
+            this.cacheElements();
+            this.bindEvents();
+            this.startListening();
+            this.setupWakeLock();
+        }
+        
+        cacheElements() {
+            this.slidesWrapper = document.getElementById('slidesWrapper');
+            this.progressBar = document.getElementById('progressBar');
+            this.prevBtn = document.getElementById('prevBtn');
+            this.nextBtn = document.getElementById('nextBtn');
+            this.playPauseBtn = document.getElementById('playPauseBtn');
+            this.speedBtn = document.getElementById('speedBtn');
+            this.fullscreenBtn = document.getElementById('fullscreenBtn');
+            this.dotsContainer = document.getElementById('dotsContainer');
+            this.loadingOverlay = document.getElementById('loadingOverlay');
+        }
+        
+        bindEvents() {
+            this.prevBtn.addEventListener('click', () => this.prevSlide());
+            this.nextBtn.addEventListener('click', () => this.nextSlide());
+            this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+            this.speedBtn.addEventListener('click', () => this.changeSpeed());
+            this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+        }
+        
+        startListening() {
+            // Cargar fotos iniciales
+            this.loadPhotos();
+            
+            // Escuchar cambios en el almacenamiento
+            photoStorage.onUpdate(() => {
+                this.loadPhotos();
+            });
+            
+            // También escuchar cambios en localStorage (múltiples pestañas)
+            window.addEventListener('storage', (e) => {
+                if (e.key === photoStorage.STORAGE_KEY) {
+                    this.loadPhotos();
                 }
-                imgElement.style.opacity = '0';
-                photoInfo.textContent = '📺 Esperando la primera foto aprobada...';
+            });
+        }
+        
+        loadPhotos() {
+            // Obtener todas las fotos aprobadas
+            this.photos = photoStorage.getPhotosByStatus('aprobada');
+            // Ordenar por fecha (más recientes primero)
+            this.photos.sort((a, b) => b.fecha - a.fecha);
+            
+            this.hideLoading();
+            
+            if (this.photos.length === 0) {
+                this.showEmptyMessage();
+                this.stopSlideshow();
                 return;
             }
             
-            // Solo actualizar si es una foto nueva
-            if (currentPhotoId !== lastPhoto.id) {
-                loadingDiv.style.display = 'none';
-                currentPhotoId = lastPhoto.id;
-                
-                // Efecto fade
-                imgElement.style.opacity = '0';
-                
-                setTimeout(() => {
-                    imgElement.src = lastPhoto.url;
-                    imgElement.alt = lastPhoto.description || 'Foto en pantalla';
-                    
-                    if (lastPhoto.description) {
-                        photoInfo.innerHTML = `📝 ${escapeHtml(lastPhoto.description)}`;
-                    } else {
-                        photoInfo.innerHTML = '';
-                    }
-                    
-                    imgElement.style.opacity = '1';
-                }, 300);
+            this.hideEmptyMessage();
+            this.renderSlides();
+            this.renderDots();
+            
+            // Resetear al primer slide si el índice actual es inválido
+            if (this.currentIndex >= this.photos.length) {
+                this.currentIndex = 0;
+            }
+            
+            this.showSlide(this.currentIndex);
+            this.startSlideshow();
+        }
+        
+        renderSlides() {
+            this.slidesWrapper.innerHTML = this.photos.map((photo, index) => `
+                <div class="slide" data-index="${index}">
+                    <img src="${photo.url}" alt="${this.escapeHtml(photo.description || 'Foto')}" loading="lazy">
+                    <div class="slide-info">
+                        ${photo.description ? `<div class="description">📝 ${this.escapeHtml(photo.description)}</div>` : ''}
+                        <div class="counter">
+                            ${index + 1} / ${this.photos.length} • 
+                            ${new Date(photo.fecha).toLocaleDateString()}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        renderDots() {
+            this.dotsContainer.innerHTML = this.photos.map((_, index) => `
+                <div class="dot ${index === this.currentIndex ? 'active' : ''}" data-index="${index}"></div>
+            `).join('');
+            
+            // Agregar eventos a los dots
+            document.querySelectorAll('.dot').forEach(dot => {
+                dot.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    this.goToSlide(index);
+                });
+            });
+        }
+        
+        showSlide(index) {
+            // Remover active de todos los slides
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+            });
+            
+            // Activar el slide actual
+            if (slides[index]) {
+                slides[index].classList.add('active');
+            }
+            
+            // Actualizar dots
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, i) => {
+                if (i === index) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+            
+            this.currentIndex = index;
+        }
+        
+        goToSlide(index) {
+            if (index < 0) index = this.photos.length - 1;
+            if (index >= this.photos.length) index = 0;
+            
+            this.showSlide(index);
+            this.resetProgressBar();
+            
+            // Si está en pausa, al hacer clic manual reiniciamos el timer al reanudar
+            if (!this.isPlaying) {
+                // Mantener en pausa pero mostrar la nueva foto
+            } else {
+                this.restartSlideshow();
             }
         }
         
-        function escapeHtml(text) {
+        nextSlide() {
+            if (this.photos.length === 0) return;
+            this.goToSlide(this.currentIndex + 1);
+        }
+        
+        prevSlide() {
+            if (this.photos.length === 0) return;
+            this.goToSlide(this.currentIndex - 1);
+        }
+        
+        startSlideshow() {
+            if (this.intervalId) clearInterval(this.intervalId);
+            if (!this.isPlaying) return;
+            if (this.photos.length === 0) return;
+            
+            this.intervalId = setInterval(() => {
+                this.nextSlide();
+            }, this.intervalTime);
+            
+            this.startProgressBarAnimation();
+        }
+        
+        stopSlideshow() {
+            if (this.intervalId) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+            }
+            this.stopProgressBarAnimation();
+        }
+        
+        restartSlideshow() {
+            this.stopSlideshow();
+            this.startSlideshow();
+        }
+        
+        togglePlayPause() {
+            this.isPlaying = !this.isPlaying;
+            
+            if (this.isPlaying) {
+                this.startSlideshow();
+                this.playPauseBtn.textContent = '⏸';
+                this.playPauseBtn.title = 'Pausar';
+            } else {
+                this.stopSlideshow();
+                this.playPauseBtn.textContent = '▶';
+                this.playPauseBtn.title = 'Reproducir';
+            }
+        }
+        
+        changeSpeed() {
+            this.speedIndex = (this.speedIndex + 1) % this.speedOptions.length;
+            this.intervalTime = this.speedOptions[this.speedIndex];
+            
+            let speedText = '';
+            switch(this.intervalTime) {
+                case 3000: speedText = '3s'; break;
+                case 5000: speedText = '5s'; break;
+                case 7000: speedText = '7s'; break;
+                case 10000: speedText = '10s'; break;
+            }
+            this.speedBtn.textContent = `⚡ Velocidad: ${speedText}`;
+            
+            if (this.isPlaying) {
+                this.restartSlideshow();
+            }
+        }
+        
+        startProgressBarAnimation() {
+            this.stopProgressBarAnimation();
+            
+            let startTime = Date.now();
+            const animate = () => {
+                if (!this.isPlaying || !this.progressBar) return;
+                
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min((elapsed / this.intervalTime) * 100, 100);
+                this.progressBar.style.width = `${progress}%`;
+                
+                if (progress < 100) {
+                    this.animationFrame = requestAnimationFrame(animate);
+                } else {
+                    this.progressBar.style.width = '0%';
+                }
+            };
+            
+            this.animationFrame = requestAnimationFrame(animate);
+        }
+        
+        stopProgressBarAnimation() {
+            if (this.animationFrame) {
+                cancelAnimationFrame(this.animationFrame);
+                this.animationFrame = null;
+            }
+        }
+        
+        resetProgressBar() {
+            this.stopProgressBarAnimation();
+            this.progressBar.style.width = '0%';
+            if (this.isPlaying) {
+                this.startProgressBarAnimation();
+            }
+        }
+        
+        showEmptyMessage() {
+            const existingMsg = document.querySelector('.empty-message');
+            if (!existingMsg) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'empty-message';
+                emptyMsg.innerHTML = `
+                    <h2>📭 No hay fotos aprobadas</h2>
+                    <p>Esperando que el administrador apruebe fotos para mostrar</p>
+                    <p style="margin-top: 15px; font-size: 14px; opacity: 0.7;">Las fotos aparecerán automáticamente aquí</p>
+                `;
+                document.body.appendChild(emptyMsg);
+            }
+            this.slidesWrapper.innerHTML = '';
+        }
+        
+        hideEmptyMessage() {
+            const emptyMsg = document.querySelector('.empty-message');
+            if (emptyMsg) emptyMsg.remove();
+        }
+        
+        showLoading() {
+            if (this.loadingOverlay) {
+                this.loadingOverlay.style.display = 'flex';
+            }
+        }
+        
+        hideLoading() {
+            if (this.loadingOverlay) {
+                setTimeout(() => {
+                    this.loadingOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        if (this.loadingOverlay) {
+                            this.loadingOverlay.style.display = 'none';
+                            this.loadingOverlay.style.opacity = '1';
+                        }
+                    }, 500);
+                }, 500);
+            }
+        }
+        
+        async toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+                this.fullscreenBtn.textContent = '✖ Salir';
+            } else {
+                await document.exitFullscreen();
+                this.fullscreenBtn.textContent = '⛶ Pantalla completa';
+            }
+        }
+        
+        async setupWakeLock() {
+            if ('wakeLock' in navigator) {
+                let wakeLock = null;
+                const requestWakeLock = async () => {
+                    try {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    } catch (err) {
+                        console.log('Wake Lock no soportado:', err);
+                    }
+                };
+                await requestWakeLock();
+                document.addEventListener('visibilitychange', () => {
+                    if (wakeLock !== null && document.visibilityState === 'visible') {
+                        requestWakeLock();
+                    }
+                });
+            }
+        }
+        
+        escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        
-        // Escuchar cambios en el almacenamiento
-        photoStorage.onUpdate(() => {
-            updateDisplay();
-        });
-        
-        // También escuchar cambios en localStorage (para pestañas múltiples)
-        window.addEventListener('storage', (e) => {
-            if (e.key === photoStorage.STORAGE_KEY) {
-                updateDisplay();
-            }
-        });
-        
-        // Inicializar
-        setTimeout(() => {
-            updateDisplay();
-        }, 100);
-        
-        // Prevenir que la pantalla se apague (solicitar wake lock)
-        if ('wakeLock' in navigator) {
-            let wakeLock = null;
-            
-            const requestWakeLock = async () => {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake Lock activado');
-                } catch (err) {
-                    console.log('Wake Lock no soportado:', err);
-                }
-            };
-            
-            requestWakeLock();
-            
-            // Recuperar wake lock cuando la página se vuelve visible
-            document.addEventListener('visibilitychange', () => {
-                if (wakeLock !== null && document.visibilityState === 'visible') {
-                    requestWakeLock();
-                }
-            });
-        }
-    </script>
+    }
+    
+    // Inicializar el slideshow cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', () => {
+        new SlideshowManager();
+    });
+</script>
 </body>
 </html>
